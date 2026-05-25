@@ -29,7 +29,7 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git config --global user.name "github-actions"
 
-          git clone https://HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME hf-space
+          git clone https://vamshikrishna89:$HF_TOKEN@huggingface.co/spaces/vamshikrishna89/test hf-space
 
           rsync -av --exclude ".git" \
                     --exclude ".github" \
