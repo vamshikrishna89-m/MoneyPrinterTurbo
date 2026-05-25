@@ -1,46 +1,54 @@
-# Use an official Python runtime as a parent image  FROM python:3.11-slim-bullseye
+name: Deploy to Hugging Face Space
 
-# Set the working directory in the container
-WORKDIR /MoneyPrinterTurbo
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
-# Set permissions
-RUN chmod 777 /MoneyPrinterTurbo
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-ENV PYTHONPATH="/MoneyPrinterTurbo"
-ENV STREAMLIT_SERVER_PORT=7860
-ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
-ENV STREAMLIT_SERVER_ENABLE_CORS=true
-ENV STREAMLIT_SERVER_GATHER_USAGE_STATS=false
-ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    imagemagick \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
+      - name: Install Git LFS
+        run: |
+          sudo apt-get update
+          sudo apt-get install git-lfs -y
+          git lfs install
 
-# Fix security policy for ImageMagick
-RUN sed -i '/<policy domain="path" rights="none" pattern="@\*"/d' /etc/ImageMagick-6/policy.xml
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USERNAME: ${{ secrets.HF_USERNAME }}
+          HF_SPACE_NAME: ${{ secrets.HF_SPACE_NAME }}
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
 
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt ./
+          git clone https://HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME hf-space
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --retries 3 --timeout 120 -r requirements.txt
+          rsync -av --exclude ".git" \
+                    --exclude ".github" \
+                    --exclude "__pycache__" \
+                    --exclude "*.pyc" \
+                    ./ hf-space/
 
-# Copy application code
-COPY . .
+          cd hf-space
 
-# Create storage directory
-RUN mkdir -p /MoneyPrinterTurbo/storage
+          cat > README.md <<EOF
+          ---
+          title: MoneyPrinterTurbo
+          emoji: 🚀
+          colorFrom: blue
+          colorTo: purple
+          sdk: docker
+          pinned: false
+          license: mit
+          ---
 
-# Expose port 7860 (Hugging Face Spaces default)
-EXPOSE 7860
-
-# Start Streamlit WebUI
-CMD ["streamlit", "run", "./webui/Main.py", \
-     "--server.port=7860", \
-     "--server.address=0.0.0.0", \
-     "--server.enableCORS=true", \
-     "--browser.gatherUsageStats=false"]
+          # MoneyPrinterTurbo
+          EOF
