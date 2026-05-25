@@ -27,6 +27,11 @@ node_modules
 venv/
 .venv
 
+# Large resource files (use local files or download on demand)
+/resource/fonts/*.ttc
+/resource/fonts/*.ttf
+/resource/songs/*.mp3
+
 # Debug and test files
 CLAUDE.md
 debug/
