@@ -1,47 +1,28 @@
-# Use an official Python runtime as a parent image
-FROM python:3.11-slim-bullseye
+FROM python:3.11-slim
 
-# Set the working directory in the container
-WORKDIR /MoneyPrinterTurbo
+WORKDIR /app
 
-# Set permissions
-RUN chmod 777 /MoneyPrinterTurbo
-
-ENV PYTHONPATH="/MoneyPrinterTurbo"
+ENV PYTHONUNBUFFERED=1
 ENV STREAMLIT_SERVER_PORT=7860
 ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
-ENV STREAMLIT_SERVER_ENABLE_CORS=true
-ENV STREAMLIT_SERVER_GATHER_USAGE_STATS=false
 ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    imagemagick \
+RUN apt-get update && apt-get install -y \
     ffmpeg \
+    imagemagick \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# Fix security policy for ImageMagick
-RUN sed -i '/<policy domain="path" rights="none" pattern="@\*"/d' /etc/ImageMagick-6/policy.xml
+COPY requirements.txt .
 
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt ./
+RUN pip install --upgrade pip
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --retries 3 --timeout 120 -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
 COPY . .
 
-# Create storage directory
-RUN mkdir -p /MoneyPrinterTurbo/storage
+RUN mkdir -p /app/storage
 
-# Expose port 7860 (Hugging Face Spaces default)
 EXPOSE 7860
 
-# Start Streamlit WebUI
-CMD ["streamlit", "run", "./webui/Main.py", \
-     "--server.port=7860", \
-     "--server.address=0.0.0.0", \
-     "--server.enableCORS=true", \
-     "--browser.gatherUsageStats=false"]
+CMD ["streamlit", "run", "webui/Main.py", "--server.port=7860", "--server.address=0.0.0.0"]
