@@ -54,5 +54,5 @@ jobs:
           EOF
 
           git add .
-          git commit
+          git commit -m "Auto deploy to Hugging Face" || echo "No changes to commit"
           git push
