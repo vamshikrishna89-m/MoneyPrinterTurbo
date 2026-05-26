@@ -1,3 +1,13 @@
+---
+title: MoneyPrinterTurbo
+emoji: 🚀
+colorFrom: blue
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 <div align="center">
 <h1 align="center">MoneyPrinterTurbo 💸</h1>
 
